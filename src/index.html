@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>Berani Resign? — Kalkulator Kesiapan Resign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f3ecdc;
+    --card:#fffdf6;
+    --ink:#221d13;
+    --muted:#6e6353;
+    --line:#ddd0b4;
+    --line-strong:#c9b98f;
+    --green:#1e7a4c;
+    --green-deep:#14573a;
+    --green-soft:#e2f2e6;
+    --red:#b3261e;
+    --red-soft:#fbe7e4;
+    --yellow-ink:#7c5200;
+    --yellow-soft:#fdf0bd;
+    --field:#ffffff;
+    --paper:#fffdf2;
+    --paper-ink:#22201a;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#171410;
+      --card:#221e16;
+      --ink:#f2ebda;
+      --muted:#b6ab93;
+      --line:#453d2c;
+      --line-strong:#5c5238;
+      --green:#4cc184;
+      --green-deep:#7ed7a8;
+      --green-soft:#16291e;
+      --red:#ff8a80;
+      --red-soft:#351a17;
+      --yellow-ink:#f2d98a;
+      --yellow-soft:#352c10;
+      --field:#191510;
+      --paper:#fffdf2;
+      --paper-ink:#22201a;
+    }
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 16px 40px}
+  header.wrap{padding-top:28px;padding-bottom:6px}
+  h1{
+    margin:0;
+    font-size:clamp(30px,8vw,40px);
+    line-height:1.1;
+    font-weight:800;
+    letter-spacing:-.02em;
+  }
+  .lede{margin:10px 0 0;color:var(--muted);font-size:16.5px;max-width:34em}
+  .lede strong{color:var(--ink)}
+  h2{
+    margin:0 0 4px;
+    font-size:19px;
+    line-height:1.3;
+    font-weight:800;
+    letter-spacing:-.01em;
+  }
+  .section-note{margin:0 0 16px;color:var(--muted);font-size:14px}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    margin-top:16px;
+    box-shadow:0 1px 0 rgba(60,45,10,.06);
+  }
+  .card--result{border:1.5px solid var(--line-strong)}
+
+  /* ---------- Form ---------- */
+  .field{margin-bottom:16px}
+  .field:last-child{margin-bottom:0}
+  label{display:block;font-weight:700;font-size:15px;margin-bottom:6px}
+  .hint{margin:6px 0 0;color:var(--muted);font-size:13.5px;line-height:1.45}
+  .money-wrap{position:relative}
+  .money-wrap .prefix{
+    position:absolute;left:13px;top:50%;transform:translateY(-50%);
+    font-weight:700;color:var(--muted);pointer-events:none;font-size:16px;
+  }
+  input[type="text"],input[type="date"],select{
+    width:100%;
+    font:inherit;
+    font-size:16px;
+    color:var(--ink);
+    background:var(--field);
+    border:1.5px solid var(--line-strong);
+    border-radius:10px;
+    padding:12px 13px;
+    margin:0;
+  }
+  .money-wrap input{padding-left:44px;font-variant-numeric:tabular-nums;font-weight:600}
+  input[type="text"]:focus,input[type="date"]:focus,select:focus{
+    outline:2px solid var(--green);
+    outline-offset:2px;
+    border-color:var(--green);
+  }
+  input[aria-invalid="true"]{border-color:var(--red);background:var(--red-soft)}
+  .error{margin:6px 0 0;color:var(--red);font-size:13.5px;font-weight:600}
+  .privacy-note{
+    margin:16px 0 0;padding-top:14px;border-top:1px dashed var(--line);
+    color:var(--muted);font-size:13.5px;
+  }
+  .empty-state{
+    border:1.5px dashed var(--line-strong);
+    background:transparent;
+    text-align:left;
+  }
+  .empty-state p{margin:0;color:var(--muted)}
+  .empty-state strong{color:var(--ink)}
+
+  /* ---------- Stamp / verdict ---------- */
+  .stamp{
+    display:block;
+    text-align:center;
+    font-weight:800;
+    font-size:clamp(21px,6vw,27px);
+    line-height:1.25;
+    letter-spacing:.01em;
+    padding:13px 14px;
+    border:3px solid currentColor;
+    outline:2px solid currentColor;
+    outline-offset:4px;
+    border-radius:6px;
+    transform:rotate(-2.5deg);
+    margin:8px 6px 16px;
+    background:transparent;
+  }
+  .stamp--animate{animation:stampIn .45s cubic-bezier(.2,1.4,.4,1) both}
+  @keyframes stampIn{
+    from{transform:scale(1.55) rotate(-8deg);opacity:0}
+    to{transform:scale(1) rotate(-2.5deg);opacity:1}
+  }
+  .stamp--red{color:var(--red)}
+  .stamp--yellow{color:var(--yellow-ink);background:var(--yellow-soft)}
+  .stamp--light{color:var(--green)}
+  .stamp--green{color:var(--green-deep);background:var(--green-soft)}
+  .verdict-reason{margin:0;text-align:center;font-size:15px}
+  .verdict-reason strong{font-weight:700}
+
+  /* ---------- Runway ---------- */
+  .runway-block{margin-top:22px;padding-top:20px;border-top:1px solid var(--line);text-align:center}
+  .runway-label{font-weight:700;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .runway-number{
+    font-size:clamp(52px,15vw,68px);
+    line-height:1.05;
+    font-weight:800;
+    letter-spacing:-.03em;
+    font-variant-numeric:tabular-nums;
+    margin:4px 0 0;
+  }
+  .runway-number small{font-size:.42em;font-weight:700;letter-spacing:0;margin-left:2px}
+  .runway-sub{margin:8px 0 0;color:var(--muted);font-size:15px}
+  .runway-sub strong{color:var(--ink)}
+  .bar-track{
+    height:14px;border-radius:999px;background:var(--bg);
+    border:1px solid var(--line);overflow:hidden;margin:18px 0 6px;
+  }
+  .bar-fill{
+    height:100%;width:0%;background:var(--green);
+    border-radius:999px;transition:width .6s ease, background-color .3s ease;
+  }
+  .bar-fill.is-low{background:var(--red)}
+  .bar-fill.is-mid{background:#c98a00}
+  .bar-scale{display:flex;justify-content:space-between;color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+  .facts{
+    display:grid;grid-template-columns:1fr 1fr;gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:18px;
+  }
+  .fact{background:var(--card);padding:12px 13px}
+  .fact dt{font-size:12.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .fact dd{margin:3px 0 0;font-weight:700;font-variant-numeric:tabular-nums;font-size:15.5px}
+  .fact--wide{grid-column:1 / -1}
+
+  /* ---------- Target ---------- */
+  .target-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .target-amount{font-size:30px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15}
+  .target-mult{font-weight:700;color:var(--muted);font-size:14px;white-space:nowrap}
+  .target-bar{margin-top:14px}
+  .target-row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:15px}
+  .target-row:first-of-type{border-top:0}
+  .target-row span:first-child{color:var(--muted)}
+  .target-row strong{font-variant-numeric:tabular-nums;text-align:right}
+  .target-row strong.good{color:var(--green)}
+  .target-row strong.bad{color:var(--red)}
+
+  /* ---------- Checklist / score ---------- */
+  .score-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .score-big{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+  .score-count{color:var(--muted);font-weight:600}
+  .checklist{list-style:none;margin:14px 0 0;padding:0}
+  .checklist li{border-top:1px solid var(--line)}
+  .checklist li:first-child{border-top:0}
+  .check-item{
+    display:flex;gap:12px;align-items:flex-start;
+    padding:12px 2px;cursor:pointer;font-weight:500;font-size:15.5px;margin:0;
+  }
+  .check-item input{
+    flex:0 0 auto;width:21px;height:21px;margin:1px 0 0;
+    accent-color:var(--green);cursor:pointer;
+  }
+  .check-item input:disabled{cursor:default}
+  .check-item .auto-tag{
+    display:block;font-size:13px;color:var(--muted);font-weight:500;margin-top:2px;
+  }
+  .check-item:has(input:checked) .check-text{color:var(--ink)}
+  .check-item:has(input:disabled){cursor:default;opacity:.92}
+
+  /* ---------- Simulation ---------- */
+  .slider-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .slider-value{font-weight:800;font-size:20px;font-variant-numeric:tabular-nums}
+  input[type="range"]{width:100%;accent-color:var(--green);margin:10px 0 4px;height:32px;cursor:pointer}
+  .slider-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:12.5px}
+  .sim-out{
+    background:var(--bg);border:1px solid var(--line);border-radius:10px;
+    padding:14px;margin-top:14px;
+  }
+  .sim-out p{margin:0}
+  .sim-out .sim-runway{font-size:24px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin-top:2px}
+  .sim-out .sim-detail{color:var(--muted);font-size:14px;margin-top:4px}
+  .divider{border:0;border-top:1px solid var(--line);margin:20px 0}
+  .save-out{margin:10px 0 0;font-size:15px}
+  .save-out strong{font-variant-numeric:tabular-nums}
+
+  /* ---------- Letter ---------- */
+  .paper{
+    background:var(--paper);
+    color:var(--paper-ink);
+    border:1px solid #d8d2bd;
+    border-radius:4px;
+    box-shadow:0 2px 0 rgba(60,45,10,.12);
+    padding:22px 20px 18px;
+    margin-top:16px;
+  }
+  .letter-text{
+    margin:0;
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:15.5px;
+    line-height:32px;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    background-image:repeating-linear-gradient(transparent 0 31px,#cbd8e4 31px 32px);
+  }
+  .copy-btn{
+    width:100%;margin-top:14px;
+    font:inherit;font-weight:700;font-size:16px;
+    color:#fff;background:var(--green);
+    border:0;border-radius:10px;padding:13px 16px;cursor:pointer;
+  }
+  .copy-btn:hover{filter:brightness(1.06)}
+  .copy-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .copy-btn.is-copied{background:var(--green-deep)}
+  .letter-note{margin:12px 0 0;color:var(--muted);font-size:13.5px;line-height:1.5}
+
+  /* ---------- Disclaimer ---------- */
+  .disclaimer{margin-top:20px;border:1px solid var(--line);border-radius:12px;padding:16px 18px;color:var(--muted);font-size:13.5px;line-height:1.55}
+  .disclaimer strong{color:var(--ink)}
+  .disclaimer p{margin:0}
+  .disclaimer p + p{margin-top:8px}
+
+  @media (min-width:520px){
+    .facts{grid-template-columns:1fr 1fr}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none !important;transition:none !important}
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <h1>Berani Resign?</h1>
+  <p class="lede">Hitung dulu pakai angka sendiri: berapa lama tabungan bertahan, seberapa jauh dari dana darurat yang aman, dan apa yang masih kurang sebelum surat itu dikirim.</p>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ FORM ============ -->
+  <section class="card" aria-labelledby="form-title">
+    <h2 id="form-title">Angka kamu</h2>
+    <p class="section-note">Isi dari kondisi sekarang. Semua hitungan berubah langsung saat angka diubah.</p>
+
+    <div class="field">
+      <label for="savings">Tabungan siap pakai (Rp)</label>
+      <div class="money-wrap">
+        <span class="prefix" aria-hidden="true">Rp</span>
+        <input type="text" inputmode="numeric" autocomplete="off" id="savings" class="js-rupiah" aria-describedby="savings-hint savings-error" />
+      </div>
+      <p class="hint" id="savings-hint">Uang yang bisa langsung dipakai, bukan aset yang sulit dicairkan.</p>
+      <p class="error" id="savings-error" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="expenses">Pengeluaran wajib bulanan (Rp)</label>
+      <div class="money-wrap">
+        <span class="prefix" aria-hidden="true">Rp</span>
+        <input type="text" inputmode="numeric" autocomplete="off" id="expenses" class="js-rupiah" aria-describedby="expenses-hint expenses-error" />
+      </div>
+      <p class="hint" id="expenses-hint">Sewa, makan, transport, tagihan, dan cicilan yang wajib dibayar tiap bulan.</p>
+      <p class="error" id="expenses-error" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="sideIncome">Pemasukan sampingan / pasif bulanan (Rp)</label>
+      <div class="money-wrap">
+        <span class="prefix" aria-hidden="true">Rp</span>
+        <input type="text" inputmode="numeric" autocomplete="off" id="sideIncome" class="js-rupiah" aria-describedby="side-hint" />
+      </div>
+      <p class="hint" id="side-hint">Boleh 0 kalau belum ada. Pemasukan ini mengurangi defisit tiap bulan.</p>
+    </div>
+
+    <div class="field">
+      <label for="profile">Profil tanggungan</label>
+      <select id="profile">
+        <option value="single">Lajang</option>
+        <option value="married0">Menikah tanpa anak</option>
+        <option value="married1">Menikah + 1 anak</option>
+        <option value="married2">Menikah + 2 anak atau lebih</option>
+        <option value="freelance">Freelance</option>
+      </select>
+      <p class="hint">Profil menentukan kelipatan target dana darurat di bawah.</p>
+    </div>
+
+    <p class="privacy-note">Angka dihitung di perangkat ini saja dan tidak disimpan atau dikirim ke mana pun.</p>
+  </section>
+
+  <!-- ============ EMPTY STATE ============ -->
+  <section class="card empty-state" id="emptyState" aria-live="polite">
+    <p><strong>Hasil akan muncul di sini.</strong><br />Isi tabungan siap pakai dan pengeluaran wajib bulanan di atas untuk melihat runway, target dana darurat, dan penilaiannya.</p>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <div id="results" hidden>
+
+    <!-- Verdict + runway -->
+    <section class="card card--result" aria-labelledby="verdict-title">
+      <h2 id="verdict-title">Penilaian gabungan</h2>
+      <p class="section-note">Dari runway dan skor kesiapan, diambil yang paling konservatif.</p>
+
+      <div class="stamp stamp--red" id="stamp" role="status">Jangan dulu</div>
+      <p class="verdict-reason" id="verdictReason"></p>
+
+      <div class="runway-block">
+        <div class="runway-label">Runway tabungan</div>
+        <p class="runway-number" id="runwayNumber">—</p>
+        <p class="runway-sub" id="runwaySub"></p>
+        <div class="bar-track" aria-hidden="true"><div class="bar-fill" id="runwayBar"></div></div>
+        <div class="bar-scale" aria-hidden="true"><span>0 bln</span><span>3 bln</span><span>6 bln</span><span>12 bln+</span></div>
+
+        <dl class="facts">
+          <div class="fact">
+            <dt>Defisit bulanan</dt>
+            <dd id="factDeficit">—</dd>
+          </div>
+          <div class="fact">
+            <dt>Pengeluaran</dt>
+            <dd id="factExpenses">—</dd>
+          </div>
+          <div class="fact">
+            <dt>Pemasukan sampingan</dt>
+            <dd id="factSide">—</dd>
+          </div>
+          <div class="fact">
+            <dt>Tabungan siap pakai</dt>
+            <dd id="factSavings">—</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- Emergency fund target -->
+    <section class="card" aria-labelledby="target-title">
+      <h2 id="target-title">Target dana darurat</h2>
+      <p class="section-note">Kelipatan ini memakai ujung atas yang konservatif dari panduan umum 3–12x pengeluaran bulanan, karena berhenti kerja berarti tanpa gaji tetap sampai ada pemasukan pengganti.</p>
+      <div class="target-top">
+        <div class="target-amount" id="targetAmount">—</div>
+        <div class="target-mult" id="targetMult">—</div>
+      </div>
+      <div class="bar-track target-bar" aria-hidden="true"><div class="bar-fill" id="targetBar" style="background:var(--green)"></div></div>
+      <div style="margin-top:14px">
+        <div class="target-row"><span>Tercapai</span><strong id="targetPct">—</strong></div>
+        <div class="target-row"><span>Selisih terhadap tabungan</span><strong id="targetGap">—</strong></div>
+        <div class="target-row"><span>Pengeluaran wajib bulanan</span><strong id="targetExpenses">—</strong></div>
+      </div>
+    </section>
+
+    <!-- Readiness checklist -->
+    <section class="card" aria-labelledby="score-title">
+      <h2 id="score-title">Skor kesiapan</h2>
+      <p class="section-note">Centang yang sudah benar-benar siap. Item pertama terisi otomatis dari hasil dana darurat.</p>
+      <div class="score-row">
+        <div class="score-big" id="scoreBig">0%</div>
+        <div class="score-count" id="scoreCount">0 dari 8 tercentang</div>
+      </div>
+      <ul class="checklist" id="checklist">
+        <li>
+          <label class="check-item">
+            <input type="checkbox" id="check-auto" disabled />
+            <span><span class="check-text">Dana darurat mencapai target</span><span class="auto-tag" id="autoTag">Otomatis dari hasil di atas.</span></span>
+          </label>
+        </li>
+        <li><label class="check-item"><input type="checkbox" class="js-check" /><span class="check-text">Ada pemasukan pengganti</span></label></li>
+        <li><label class="check-item"><input type="checkbox" class="js-check" /><span class="check-text">Ada tawaran kerja atau pipeline freelance</span></label></li>
+        <li><label class="check-item"><input type="checkbox" class="js-check" /><span class="check-text">BPJS / asuransi mandiri siap</span></label></li>
+        <li><label class="check-item"><input type="checkbox" class="js-check" /><span class="check-text">Cicilan / utang terkendali</span></label></li>
+        <li><label class="check-item"><input type="checkbox" class="js-check" /><span class="check-text">Skill atau portofolio siap jual</span></label></li>
+        <li><label class="check-item"><input type="checkbox" class="js-check" /><span class="check-text">Rencana konkret 3 bulan pertama</span></label></li>
+        <li><label class="check-item"><input type="checkbox" class="js-check" /><span class="check-text">Dukungan keluarga / pasangan</span></label></li>
+      </ul>
+    </section>
+
+    <!-- Simulation -->
+    <section class="card" aria-labelledby="sim-title">
+      <h2 id="sim-title">Simulasi: kalau pengeluaran dipangkas</h2>
+      <p class="section-note">Geser untuk melihat efeknya ke runway, tanpa mengubah angka utama di atas.</p>
+
+      <div class="slider-row">
+        <label for="cutSlider" style="margin:0">Pangkas pengeluaran</label>
+        <span class="slider-value" id="cutValue">0%</span>
+      </div>
+      <input type="range" id="cutSlider" min="0" max="50" step="1" value="0" />
+      <div class="slider-labels" aria-hidden="true"><span>0%</span><span>25%</span><span>50%</span></div>
+
+      <div class="sim-out">
+        <p>Runway dengan pengeluaran terpangkas</p>
+        <p class="sim-runway" id="simRunway">—</p>
+        <p class="sim-detail" id="simDetail">—</p>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="field">
+        <label for="savePerMonth">Nabung Rp per bulan menuju target dana darurat</label>
+        <div class="money-wrap">
+          <span class="prefix" aria-hidden="true">Rp</span>
+          <input type="text" inputmode="numeric" autocomplete="off" id="savePerMonth" class="js-rupiah" />
+        </div>
+      </div>
+      <p class="save-out" id="savePlanOut">Isi nominal nabung per bulan untuk melihat hitungannya.</p>
+    </section>
+
+  </div>
+
+  <!-- ============ LETTER ============ -->
+  <section class="card" aria-labelledby="letter-title">
+    <h2 id="letter-title">Draf surat pengunduran diri</h2>
+    <p class="section-note">Isi tiga kolom ini, drafnya menyesuaikan langsung. Salin, lalu sesuaikan lagi dengan kondisi sebenarnya.</p>
+
+    <div class="field">
+      <label for="letterName">Nama lengkap</label>
+      <input type="text" id="letterName" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="letterCompany">Perusahaan</label>
+      <input type="text" id="letterCompany" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="letterDate">Hari kerja terakhir</label>
+      <input type="date" id="letterDate" />
+      <p class="hint">Standarnya 30 hari dari hari ini; ubah sesuai masa pemberitahuan yang berlaku.</p>
+    </div>
+
+    <div class="paper">
+      <p class="letter-text" id="letterPreview"></p>
+    </div>
+
+    <button type="button" class="copy-btn" id="copyLetterBtn">Salin surat</button>
+    <p class="letter-note">Draf ini perlu disesuaikan dengan kontrak kerja, masa pemberitahuan (notice period), dan aturan perusahaan. Periksa kembali tanggal terakhir kerja dan pihak yang dituju sebelum surat dikirim.</p>
+  </section>
+
+  <!-- ============ DISCLAIMER ============ -->
+  <footer class="disclaimer">
+    <p><strong>Disclaimer.</strong> Hasil di halaman ini adalah estimasi edukasi, bukan saran finansial profesional. Angka memakai asumsi sederhana — pengeluaran tetap, tanpa bunga, inflasi, atau biaya tak terduga — jadi kondisi nyata bisa berbeda.</p>
+    <p>Semua angka dihitung di perangkat ini dan tidak disimpan atau dikirim ke mana pun.</p>
+  </footer>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  var MONTHS_ID = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  var MULTIPLIERS = { single: 6, married0: 6, married1: 9, married2: 12, freelance: 12 };
+  var PROFILE_LABELS = {
+    single: "Lajang",
+    married0: "Menikah tanpa anak",
+    married1: "Menikah + 1 anak",
+    married2: "Menikah + 2 anak atau lebih",
+    freelance: "Freelance"
+  };
+
+  function $(id){ return document.getElementById(id); }
+
+  function formatRp(n){
+    return "Rp " + Math.round(n).toLocaleString("id-ID");
+  }
+  function formatMonths(n){
+    return n.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+  function formatPct(n){
+    return n.toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + "%";
+  }
+  function formatLongDate(d){
+    return d.getDate() + " " + MONTHS_ID[d.getMonth()] + " " + d.getFullYear();
+  }
+  function formatMonthYear(d){
+    return MONTHS_ID[d.getMonth()] + " " + d.getFullYear();
+  }
+  function monthPlus(base, months){
+    return new Date(base.getFullYear(), base.getMonth() + months, 1);
+  }
+
+  /* ---------- Rupiah inputs ---------- */
+  function parseMoneyInput(el){
+    var digits = (el.value || "").replace(/\D/g, "");
+    if(!digits) return null;
+    return Number(digits);
+  }
+  function formatMoneyInput(el){
+    var digits = (el.value || "").replace(/\D/g, "").slice(0, 15);
+    el.value = digits ? Number(digits).toLocaleString("id-ID") : "";
+  }
+
+  var savingsEl = $("savings"), expensesEl = $("expenses"), sideEl = $("sideIncome"),
+      profileEl = $("profile"), cutEl = $("cutSlider"), saveEl = $("savePerMonth");
+
+  var moneyInputs = document.querySelectorAll(".js-rupiah");
+  moneyInputs.forEach(function(el){
+    el.addEventListener("input", function(){
+      formatMoneyInput(el);
+      recalc(true);
+    });
+  });
+  profileEl.addEventListener("change", function(){ recalc(true); });
+  cutEl.addEventListener("input", function(){ recalc(true); });
+
+  function setError(el, msgEl, msg){
+    if(msg){
+      msgEl.textContent = msg;
+      msgEl.hidden = false;
+      el.setAttribute("aria-invalid", "true");
+    } else {
+      msgEl.textContent = "";
+      msgEl.hidden = true;
+      el.removeAttribute("aria-invalid");
+    }
+  }
+
+  /* ---------- Checklist ---------- */
+  var autoCheck = $("check-auto");
+  var manualChecks = document.querySelectorAll(".js-check");
+  manualChecks.forEach(function(cb){
+    cb.addEventListener("change", function(){ recalc(false); });
+  });
+
+  var lastVerdictKey = null;
+
+  function currentValues(){
+    var savings = parseMoneyInput(savingsEl);
+    var expenses = parseMoneyInput(expensesEl);
+    var sideRaw = parseMoneyInput(sideEl);
+    var side = sideRaw === null ? 0 : sideRaw;
+    return { savings: savings, expenses: expenses, side: side, profile: profileEl.value };
+  }
+
+  function decideVerdict(runway, unlimited, scorePct, scoreCount){
+    // runway: number of months, or Infinity when unlimited
+    var rLabel = unlimited ? "tidak terbatas" : formatMonths(runway) + " bulan";
+    if(runway < 3 || scorePct < 40){
+      var reason;
+      if(runway < 3 && scorePct < 40){
+        reason = "Runway " + rLabel + " dan skor kesiapan " + formatPct(scorePct) + " sama-sama di bawah ambang aman, jadi keputusan yang paling konservatif yang dipakai.";
+      } else if(runway < 3){
+        reason = "Runway " + rLabel + " berada di bawah 3 bulan, jadi tabungan habis sebelum ada waktu cukup mencari pengganti yang stabil.";
+      } else {
+        reason = "Skor kesiapan " + formatPct(scorePct) + " berada di bawah 40%, jadi meski runway cukup, kesiapan di luar angka belum memadai.";
+      }
+      return { key: "red", cls: "stamp--red", text: "Jangan dulu", reason: reason };
+    }
+    if(runway < 6){
+      return { key: "yellow", cls: "stamp--yellow", text: "Napas pendek — siapin dulu",
+        reason: "Runway " + rLabel + " berada di rentang 3–6 bulan, jadi napasnya pendek dan tabungan perlu ditebalkan dulu." };
+    }
+    if(runway < 12){
+      if(scorePct >= 60){
+        return { key: "light", cls: "stamp--light", text: "Siap, dengan rencana",
+          reason: "Runway " + rLabel + " dan skor kesiapan " + formatPct(scorePct) + " sudah melewati ambang minimum, tapi rencana 3 bulan pertama tetap wajib ditulis." };
+      }
+      return { key: "yellow", cls: "stamp--yellow", text: "Napas pendek — siapin dulu",
+        reason: "Runway " + rLabel + " sebenarnya cukup, tapi skor kesiapan " + formatPct(scorePct) + " belum mencapai 60%, jadi dipakai penilaian yang lebih konservatif." };
+    }
+    // runway >= 12 or unlimited
+    if(scorePct >= 60){
+      return { key: "green", cls: "stamp--green", text: "Gas, tapi tetap pakai rencana",
+        reason: unlimited
+          ? "Arus kas bulanan sudah menutupi pengeluaran dan skor kesiapan " + formatPct(scorePct) + " sudah kuat, tapi rencana dan masa transisi tetap perlu dijaga."
+          : "Runway " + rLabel + " dan skor kesiapan " + formatPct(scorePct) + " sama-sama kuat, tapi rencana dan masa transisi tetap perlu dijaga." };
+    }
+    return { key: "light", cls: "stamp--light", text: "Siap, dengan rencana",
+      reason: "Runway " + rLabel + " sangat panjang, tapi skor kesiapan " + formatPct(scorePct) + " belum mencapai 60%, jadi dipakai penilaian yang lebih konservatif." };
+  }
+
+  function recalc(showErrors){
+    var v = currentValues();
+    var resultsEl = $("results"), emptyEl = $("emptyState");
+
+    var savingsError = null, expensesError = null;
+    if(v.savings === null) savingsError = "Isi tabungan siap pakai. Kalau belum ada, isi 0.";
+    if(v.expenses === null) expensesError = "Isi pengeluaran wajib bulanan.";
+    else if(v.expenses <= 0) expensesError = "Pengeluaran wajib bulanan harus lebih dari Rp 0.";
+
+    if(showErrors){
+      setError(savingsEl, $("savings-error"), savingsError);
+      setError(expensesEl, $("expenses-error"), expensesError);
+    }
+
+    var valid = !savingsError && !expensesError;
+    if(!valid){
+      resultsEl.hidden = true;
+      emptyEl.hidden = false;
+      return;
+    }
+    resultsEl.hidden = false;
+    emptyEl.hidden = true;
+
+    var savings = v.savings, expenses = v.expenses, side = v.side;
+    var deficit = expenses - side;
+    var unlimited = deficit <= 0;
+    var runway = unlimited ? Infinity : savings / deficit;
+
+    /* ----- Runway display ----- */
+    var runwayNumber = $("runwayNumber"), runwaySub = $("runwaySub"), runwayBar = $("runwayBar");
+    if(unlimited){
+      runwayNumber.innerHTML = "Tidak terbatas<small></small>";
+      var surplus = side - expenses;
+      runwaySub.innerHTML = surplus > 0
+        ? "Pemasukan sampingan <strong>" + formatRp(side) + "</strong> melebihi pengeluaran <strong>" + formatRp(expenses) + "</strong> sebesar <strong>" + formatRp(surplus) + "</strong> per bulan, jadi tabungan tidak tergerus dari sisi arus kas."
+        : "Pemasukan sampingan <strong>" + formatRp(side) + "</strong> sama persis dengan pengeluaran <strong>" + formatRp(expenses) + "</strong>, jadi tabungan tidak tergerus dari sisi arus kas.";
+      runwayBar.style.width = "100%";
+      runwayBar.className = "bar-fill";
+    } else {
+      runwayNumber.innerHTML = formatMonths(runway) + "<small>bulan</small>";
+      var outDate = monthPlus(new Date(), Math.floor(runway));
+      runwaySub.innerHTML = "Diperkirakan uang habis sekitar <strong>" + formatMonthYear(outDate) + "</strong> (runway dibulatkan ke bawah, dari bulan berjalan).";
+      var pct = Math.min(100, (runway / 12) * 100);
+      runwayBar.style.width = pct + "%";
+      runwayBar.className = "bar-fill" + (runway < 3 ? " is-low" : (runway < 6 ? " is-mid" : ""));
+    }
+    $("factDeficit").textContent = unlimited ? "Rp 0 (tertutup)" : formatRp(deficit);
+    $("factExpenses").textContent = formatRp(expenses);
+    $("factSide").textContent = formatRp(side);
+    $("factSavings").textContent = formatRp(savings);
+
+    /* ----- Emergency fund target ----- */
+    var mult = MULTIPLIERS[v.profile];
+    var target = expenses * mult;
+    var pct = target > 0 ? (savings / target) * 100 : 0;
+    var gap = target - savings;
+    $("targetAmount").textContent = formatRp(target);
+    $("targetMult").textContent = mult + "x pengeluaran · " + PROFILE_LABELS[v.profile];
+    var targetBar = $("targetBar");
+    targetBar.style.width = Math.min(100, pct) + "%";
+    targetBar.style.background = pct >= 100 ? "var(--green)" : (pct >= 50 ? "#c98a00" : "var(--red)");
+    var pctEl = $("targetPct");
+    pctEl.textContent = formatPct(pct) + " tercapai";
+    pctEl.className = pct >= 100 ? "good" : "bad";
+    var gapEl = $("targetGap");
+    if(gap > 0){
+      gapEl.textContent = "Kurang " + formatRp(gap);
+      gapEl.className = "bad";
+    } else if(gap < 0){
+      gapEl.textContent = "Melebihi target sebesar " + formatRp(-gap);
+      gapEl.className = "good";
+    } else {
+      gapEl.textContent = "Pas mencapai target";
+      gapEl.className = "good";
+    }
+    $("targetExpenses").textContent = formatRp(expenses);
+
+    /* ----- Score ----- */
+    var autoReached = savings >= target;
+    autoCheck.checked = autoReached;
+    $("autoTag").textContent = autoReached
+      ? "Otomatis: target dana darurat sudah tercapai."
+      : "Otomatis: target dana darurat belum tercapai.";
+    var count = autoReached ? 1 : 0;
+    manualChecks.forEach(function(cb){ if(cb.checked) count++; });
+    var scorePct = (count / 8) * 100;
+    $("scoreBig").textContent = formatPct(scorePct);
+    $("scoreCount").textContent = count + " dari 8 tercentang";
+
+    /* ----- Verdict ----- */
+    var verdict = decideVerdict(runway, unlimited, scorePct, count);
+    var stamp = $("stamp");
+    stamp.textContent = verdict.text;
+    stamp.className = "stamp " + verdict.cls;
+    $("verdictReason").textContent = verdict.reason;
+    if(verdict.key !== lastVerdictKey){
+      lastVerdictKey = verdict.key;
+      stamp.classList.add("stamp--animate");
+      stamp.addEventListener("animationend", function handler(){
+        stamp.classList.remove("stamp--animate");
+        stamp.removeEventListener("animationend", handler);
+      });
+    }
+
+    /* ----- Simulation: cut expenses ----- */
+    var cutPct = Number(cutEl.value) || 0;
+    $("cutValue").textContent = cutPct + "%";
+    var simExpenses = expenses * (1 - cutPct / 100);
+    var simDeficit = simExpenses - side;
+    var simRunwayEl = $("simRunway"), simDetail = $("simDetail");
+    if(simDeficit <= 0){
+      simRunwayEl.textContent = "Tidak terbatas";
+      simDetail.textContent = "Pengeluaran terpangkas menjadi " + formatRp(simExpenses) + " per bulan dan sudah tertutup pemasukan sampingan " + formatRp(side) + ".";
+    } else {
+      var simRunway = savings / simDeficit;
+      simRunwayEl.textContent = formatMonths(simRunway) + " bulan";
+      simDetail.textContent = "Pengeluaran terpangkas menjadi " + formatRp(simExpenses) + " per bulan; defisit baru " + formatRp(simDeficit) + " per bulan.";
+    }
+
+    /* ----- Simulation: saving plan ----- */
+    var saveOut = $("savePlanOut");
+    var perMonth = parseMoneyInput(saveEl);
+    if(gap <= 0){
+      saveOut.innerHTML = "<strong>Target sudah tercapai.</strong> Tabungan sudah mencapai target dana darurat " + formatRp(target) + ", jadi tidak ada jarak yang perlu ditutup.";
+    } else if(perMonth === null || perMonth <= 0){
+      saveOut.textContent = "Isi nominal nabung per bulan untuk melihat hitungannya.";
+    } else {
+      var monthsNeeded = Math.ceil(gap / perMonth);
+      var doneDate = monthPlus(new Date(), monthsNeeded);
+      saveOut.innerHTML = "Butuh <strong>" + monthsNeeded + " bulan</strong> menabung " + formatRp(perMonth) + " per bulan untuk menutup kekurangan " + formatRp(gap) + " — target tercapai sekitar <strong>" + formatMonthYear(doneDate) + "</strong>.";
+    }
+  }
+
+  /* ---------- Letter draft ---------- */
+  var nameEl = $("letterName"), companyEl = $("letterCompany"), dateEl = $("letterDate");
+  var today = new Date();
+  var defaultLast = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+  function toInputDate(d){
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+  dateEl.value = toInputDate(defaultLast);
+
+  function buildLetterText(){
+    var name = (nameEl.value || "").trim();
+    var company = (companyEl.value || "").trim();
+    var displayName = name || "[Nama lengkap]";
+    var displayCompany = company || "[Nama perusahaan]";
+    var lastDate = dateEl.value ? new Date(dateEl.value + "T00:00:00") : defaultLast;
+    var lastText = formatLongDate(lastDate);
+    var lines = [];
+    lines.push("Jakarta, " + formatLongDate(today));
+    lines.push("");
+    lines.push("Kepada Yth.");
+    lines.push("HRD " + displayCompany);
+    lines.push("di Tempat");
+    lines.push("");
+    lines.push("Perihal: Pengunduran Diri");
+    lines.push("");
+    lines.push("Dengan hormat,");
+    lines.push("");
+    lines.push("Melalui surat ini, saya yang bertanda tangan di bawah ini:");
+    lines.push("");
+    lines.push("Nama: " + displayName);
+    lines.push("");
+    lines.push("mengajukan pengunduran diri dari " + displayCompany + ", dengan hari kerja terakhir pada " + lastText + ".");
+    lines.push("");
+    lines.push("Saya mengucapkan terima kasih atas kesempatan, bimbingan, dan pengalaman yang saya peroleh selama bekerja di " + displayCompany + ". Saya berkomitmen menyelesaikan tanggung jawab yang ada dan membantu proses serah terima selama masa pemberitahuan, sesuai ketentuan yang berlaku.");
+    lines.push("");
+    lines.push("Demikian surat ini saya sampaikan. Atas perhatian dan pengertiannya, saya ucapkan terima kasih.");
+    lines.push("");
+    lines.push("Hormat saya,");
+    lines.push("");
+    lines.push("");
+    lines.push(displayName);
+    return lines.join("\n");
+  }
+
+  function renderLetter(){
+    $("letterPreview").textContent = buildLetterText();
+  }
+  [nameEl, companyEl, dateEl].forEach(function(el){
+    el.addEventListener("input", renderLetter);
+    el.addEventListener("change", renderLetter);
+  });
+
+  var copyBtn = $("copyLetterBtn");
+  var copyTimer = null;
+  copyBtn.addEventListener("click", function(){
+    var text = buildLetterText();
+    function done(){
+      copyBtn.textContent = "Tersalin!";
+      copyBtn.classList.add("is-copied");
+      if(copyTimer) clearTimeout(copyTimer);
+      copyTimer = setTimeout(function(){
+        copyBtn.textContent = "Salin surat";
+        copyBtn.classList.remove("is-copied");
+      }, 2000);
+    }
+    function fallback(){
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch(e) {}
+      document.body.removeChild(ta);
+      done();
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else {
+      fallback();
+    }
+  });
+
+  /* ---------- Init ---------- */
+  renderLetter();
+  recalc(false);
+})();
+</script>
+</body>
+</html>
